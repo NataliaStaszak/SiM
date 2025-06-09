@@ -149,6 +149,31 @@ namespace WpfApp1
             }
         }
 
+        private void FogFilterButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (pictureSrc != null)
+            {
+                Image<Bgr, byte> img1 = new Image<Bgr, byte>(pictureSrc);
+                Image<Hsv, byte> hsvImg = img1.Convert<Hsv, byte>();
+
+                // Apply fog effect by modifying HSV channels
+                for (int y = 0; y < hsvImg.Height; y++)
+                {
+                    for (int x = 0; x < hsvImg.Width; x++)
+                    {
+                        Hsv pixel = hsvImg[y, x];
+                        pixel.Satuation = (byte)(pixel.Satuation * 0.01);
+                        pixel.Value = (byte)Math.Min(255, pixel.Value * 1.1);
+
+                        hsvImg[y, x] = pixel;
+                    }
+                }
+                ImageBrush imageBrush = new ImageBrush(Bitmap2BitmapImage(hsvImg.ToBitmap()));
+                filtredPicture.Fill = imageBrush;
+                CvInvoke.WaitKey(0);
+            }
+        }
+
         private void AddWhiteNoise(Image<Hsv, byte> image, double amount = 0.01)
         {
             Random rand = new Random();
@@ -163,7 +188,35 @@ namespace WpfApp1
                 image[y, x] = new Hsv(0, 0, 255);   
             }
         }
-        
+        private void SnowFilterButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (pictureSrc != null)
+            {
+                Image<Bgr, byte> img1 = new Image<Bgr, byte>(pictureSrc);
+                Image<Hsv, byte> hsvImg = img1.Convert<Hsv, byte>();
+
+                for (int y = 0; y < hsvImg.Height; y++)
+                {
+                    for (int x = 0; x < hsvImg.Width; x++)
+                    {
+                        Hsv pixel = hsvImg[y, x];
+                        if (pixel.Hue >= 20 && pixel.Hue <= 100 && pixel.Satuation >= 50)
+                        {
+                            pixel.Hue /= 20;
+                            pixel.Satuation = 0;
+                            pixel.Value += 50;
+                        }
+                        hsvImg[y, x] = pixel;
+                    }
+                }
+
+                AddWhiteNoise(hsvImg, amount: 0.1);
+                ImageBrush imageBrush = new ImageBrush(Bitmap2BitmapImage(hsvImg.ToBitmap()));
+                filtredPicture.Fill = imageBrush;
+                CvInvoke.WaitKey(0);
+            }
+        }
+
         private BitmapImage Bitmap2BitmapImage(Bitmap bitmap)
         {
             BitmapImage bi = new BitmapImage();
