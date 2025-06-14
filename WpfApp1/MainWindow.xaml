@@ -18,6 +18,15 @@
             RenderTransformOrigin="0.05,0.135" 
             Width="159" Click="loadButton_Click" 
             Background="PeachPuff"/>
+            
+            <Button 
+            Content="Zapisz obraz" 
+            HorizontalAlignment="Left" 
+            Margin="21,50,0,0" 
+            VerticalAlignment="Top" 
+            RenderTransformOrigin="0.05,0.135" 
+            Width="159" Click="saveButton_Click" 
+            Background="PeachPuff"/>
         <Label 
             Name="srcLabel" 
             Content="src: " 
@@ -111,6 +120,15 @@
             Height="18" 
             Width="159" 
             Click="SnowFilterButton_Click"
+            Background="PeachPuff"/>
+        <Button 
+            Content="Noc" 
+            HorizontalAlignment="Left" 
+            Margin="21,359,0,0" 
+            VerticalAlignment="Top" 
+            Height="18" 
+            Width="159" 
+            Click="NightFilterButton_Click"
             Background="PeachPuff"/>
     </Grid>
 </Window>

@@ -45,6 +45,58 @@ namespace WpfApp1
             srcLabel.Content= String.Format("src: {0}", pictureSrc);
         }
         
+    private void saveButton_Click(object sender, RoutedEventArgs e)
+    {
+        string pictureSrc = "";
+
+        SaveFileDialog saveFileDialog = new SaveFileDialog();
+        saveFileDialog.Title = "Zapisz obraz";
+        saveFileDialog.Filter = "JPG (*.jpg)|*.jpg|PNG (*.png)|*.png";
+        saveFileDialog.DefaultExt = "png";
+
+        if (saveFileDialog.ShowDialog() == true)
+        {
+            pictureSrc = saveFileDialog.FileName;
+        }
+
+        if (pictureSrc != "")
+        {
+            if (filtredPicture.Fill is ImageBrush imageBrush && imageBrush.ImageSource is BitmapSource bitmapSource)
+            {
+                BitmapEncoder encoder;
+
+                // Wybór formatu na podstawie rozszerzenia
+                if (pictureSrc.ToLower().EndsWith(".jpg"))
+                    encoder = new JpegBitmapEncoder();
+                else
+                    encoder = new PngBitmapEncoder();
+
+                encoder.Frames.Add(BitmapFrame.Create(bitmapSource));
+
+                    try
+                    {
+                        using (var fs = new FileStream(pictureSrc, FileMode.Create))
+                        {
+                            encoder.Save(fs);
+                        }
+
+                        MessageBox.Show("Zapisano przefiltrowany obraz.");
+                        filtredPicture.Fill = null;
+                }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show("Błąd zapisu: " + ex.Message, "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+            }
+            else
+            {
+                MessageBox.Show("Brak obrazu do zapisania.", "Uwaga", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+    }
+
+
+         
 
         private void SpringFilterButton_Click(object sender, RoutedEventArgs e)
         {
@@ -57,17 +109,17 @@ namespace WpfApp1
                     for (int x = 0; x < hsvImg.Width; x++)
                     {
                         Hsv pixel = hsvImg[y, x];
-                        if(pixel.Hue >= 20 && pixel.Hue <= 100 && pixel.Satuation >= 50)
+                        if (pixel.Hue >= 20 && pixel.Hue <= 100 && pixel.Satuation >= 50)
                         {
-                            pixel.Value +=50;  
+                            pixel.Value += 50;
                         }
-                    hsvImg[y, x] = pixel;
+                        hsvImg[y, x] = pixel;
                     }
                 }
 
-            ImageBrush imageBrush = new ImageBrush(Bitmap2BitmapImage(hsvImg.ToBitmap()));
-            filtredPicture.Fill = imageBrush;
-            CvInvoke.WaitKey(0);
+                ImageBrush imageBrush = new ImageBrush(Bitmap2BitmapImage(hsvImg.ToBitmap()));
+                filtredPicture.Fill = imageBrush;
+                CvInvoke.WaitKey(0);
             }
         }
 
@@ -216,6 +268,44 @@ namespace WpfApp1
                 CvInvoke.WaitKey(0);
             }
         }
+
+        private void NightFilterButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (pictureSrc != null)
+            {
+                Image<Bgr, byte> img1 = new Image<Bgr, byte>(pictureSrc);
+                Image<Hsv, byte> hsvImg = img1.Convert<Hsv, byte>();
+
+                for (int y = 0; y < hsvImg.Height; y++)
+                {
+                    for (int x = 0; x < hsvImg.Width; x++)
+                    {
+                        Hsv pixel = hsvImg[y, x];
+
+                        // Mocne przyciemnienie
+                        pixel.Value = (byte)(pixel.Value * 0.4);
+
+                        // Przesunięcie barwy w kierunku niebieskiego (np. +110°)
+                        pixel.Hue = (pixel.Hue + 110) % 180;
+
+                        // Lekka redukcja nasycenia
+                        pixel.Satuation = (byte)(pixel.Satuation * 0.7);
+
+                        hsvImg[y, x] = pixel;
+                    }
+                }
+
+                // (opcjonalnie) Dodaj lekki "cyfrowy szum"
+                AddWhiteNoise(hsvImg, amount: 0.005);
+
+                ImageBrush imageBrush = new ImageBrush(Bitmap2BitmapImage(hsvImg.ToBitmap()));
+                filtredPicture.Fill = imageBrush;
+
+                CvInvoke.WaitKey(0);
+            }
+        }
+
+
 
         private BitmapImage Bitmap2BitmapImage(Bitmap bitmap)
         {
